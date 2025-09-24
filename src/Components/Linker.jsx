@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 const Linker = () => {
     const links = [
+        "https://gemini.google.com/app",
         "https://aiskillshouse.com/student/qr-mediator.html?uid=2622&promptId=17",
         "https://aiskillshouse.com/student/qr-mediator.html?uid=2622&promptId=16",
         "https://aiskillshouse.com/student/qr-mediator.html?uid=2622&promptId=15",
@@ -41,35 +42,6 @@ const Linker = () => {
         setCurrentMessage(messages[0]);
     };
 
-    // useEffect(() => {
-    //     if (started && currentLinkIndex >= 0 && currentLinkIndex < links.length) {
-    //         const timer = setTimeout(() => {
-    //             // Create a new tab/window but keep focus on current page
-    //             const newWindow = window.open(links[currentLinkIndex], "_blank", "noopener,noreferrer");
-
-    //             // Immediately bring focus back to the current page
-    //             if (newWindow) {
-    //                 setTimeout(() => {
-    //                     window.focus();
-    //                 }, 100);
-    //             }
-
-    //             const newProgress = ((currentLinkIndex + 1) / links.length) * 100;
-    //             setProgress(newProgress);
-    //             setCurrentMessage(messages[currentLinkIndex % messages.length]);
-
-    //             if (currentLinkIndex === links.length - 1) {
-    //                 setCompleted(true);
-    //                 setShowConfetti(true);
-    //             } else {
-    //                 setCurrentLinkIndex((prev) => prev + 1);
-    //             }
-    //         }, 10000);
-
-    //         return () => clearTimeout(timer);
-    //     }
-    // }, [currentLinkIndex, started, links.length, messages]);
-
 
     useEffect(() => {
         if (started && currentLinkIndex >= 0 && currentLinkIndex < links.length) {
@@ -83,7 +55,7 @@ const Linker = () => {
                 } else {
                     setCurrentLinkIndex((prev) => prev + 1);
                 }
-            }, 10000);
+            }, 15000);
 
             return () => clearTimeout(timer);
         }
@@ -227,5 +199,6 @@ const Linker = () => {
         </>
     );
 };
+
 
 export default Linker;
