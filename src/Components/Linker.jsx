@@ -65,7 +65,7 @@ const Linker = () => {
         {
             icon: "🚀",
             title: "Completion",
-            description: "Takes Less than 40 Hours",
+            description: "Takes Less than 2 minutes",
         },
         {
             icon: "📊",
@@ -202,4 +202,5 @@ const Linker = () => {
 
 
 export default Linker;
+
 
