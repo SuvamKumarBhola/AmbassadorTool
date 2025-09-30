@@ -15,6 +15,7 @@ const Linker = () => {
     const [progress, setProgress] = useState(0);
     const [completed, setCompleted] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [popupBlocked, setPopupBlocked] = useState(false);
 
     const messages = [
         "💡 Patience is the secret sauce of success!",
@@ -31,6 +32,7 @@ const Linker = () => {
         setCurrentLinkIndex(0);
         setCompleted(false);
         setShowConfetti(false);
+        setPopupBlocked(false);
     };
 
     const handleReset = () => {
@@ -40,18 +42,36 @@ const Linker = () => {
         setCompleted(false);
         setShowConfetti(false);
         setCurrentMessage(messages[0]);
+        setPopupBlocked(false);
     };
 
-
+    // Link opening logic with popup check
     useEffect(() => {
         if (started && currentLinkIndex >= 0 && currentLinkIndex < links.length) {
             const timer = setTimeout(() => {
-                window.open(links[currentLinkIndex], "_blank", "noopener,noreferrer");
+                const newWindow = window.open(
+                    links[currentLinkIndex],
+                    "_blank",
+                    "noopener,noreferrer"
+                );
+
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+                    // Pop-up blocked
+                    setPopupBlocked(true);
+                    setStarted(false);
+                    setCurrentLinkIndex(-1);
+                    alert(
+                        "Pop-ups are blocked! Please allow pop-ups in your browser settings and restart the process."
+                    );
+                    return;
+                }
+
                 setProgress(((currentLinkIndex + 1) / links.length) * 100);
                 setCurrentMessage(messages[currentLinkIndex % messages.length]);
 
                 if (currentLinkIndex === links.length - 1) {
                     setCompleted(true);
+                    setShowConfetti(true);
                 } else {
                     setCurrentLinkIndex((prev) => prev + 1);
                 }
@@ -70,7 +90,7 @@ const Linker = () => {
         {
             icon: "📊",
             title: "Certification",
-            description: "Can be added on linkdIn",
+            description: "Can be added on LinkedIn",
         },
         {
             icon: "🔗",
@@ -86,7 +106,7 @@ const Linker = () => {
                 backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                animation: `bounce 2s infinite ${delay}ms`
+                animation: `bounce 2s infinite ${delay}ms`,
             }}
         />
     );
@@ -104,11 +124,16 @@ const Linker = () => {
                 )}
 
                 <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
-                    🎉 GSA program Journey
+                    🎉 GSA Program Journey
                 </h1>
 
+                <p className="text-red-600 font-semibold mb-4 text-center">
+                    ⚠️ Note: For certificate eligibility, please open this app on your PC and
+                    make sure pop-ups are allowed in your browser.
+                </p>
+
                 <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center space-y-6">
-                    {!started && !completed && (
+                    {!started && !completed && !popupBlocked && (
                         <>
                             <p className="text-lg text-gray-700 text-center">
                                 Click the button to start Process <b>Gemini's Adventure</b>.
@@ -155,7 +180,12 @@ const Linker = () => {
                             </p>
                             <div className="flex space-x-4 justify-center">
                                 <button
-                                    onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSdFakeForm/viewform", "_blank")}
+                                    onClick={() =>
+                                        window.open(
+                                            "https://docs.google.com/forms/d/e/1FAIpQLSdFakeForm/viewform",
+                                            "_blank"
+                                        )
+                                    }
                                     className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white"
                                 >
                                     ✅ Yes, claim it!
@@ -167,6 +197,13 @@ const Linker = () => {
                                     ❌ No thanks
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {popupBlocked && (
+                        <div className="text-center text-red-600 font-semibold">
+                            ❌ Pop-ups were blocked. Please allow pop-ups in your browser
+                            settings and click <b>Start</b> again.
                         </div>
                     )}
                 </div>
@@ -191,18 +228,11 @@ const Linker = () => {
                 </div>
 
                 <footer className="mt-12 text-center text-gray-600">
-                    <p className="text-sm">
-                        © 2025 Made specially for GSA programm
-                    </p>
+                    <p className="text-sm">© 2025 Made specially for GSA program</p>
                 </footer>
             </div>
         </>
     );
 };
 
-
 export default Linker;
-
-
-
-
