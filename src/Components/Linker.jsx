@@ -15,6 +15,7 @@ const Linker = () => {
     const [progress, setProgress] = useState(0);
     const [completed, setCompleted] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [windows, setWindows] = useState([]);
     const [popupBlocked, setPopupBlocked] = useState(false);
 
     const messages = [
@@ -26,6 +27,7 @@ const Linker = () => {
     ];
     const [currentMessage, setCurrentMessage] = useState(messages[0]);
 
+    // Start process
     const handleStart = () => {
         setStarted(true);
         setProgress(0);
@@ -33,6 +35,33 @@ const Linker = () => {
         setCompleted(false);
         setShowConfetti(false);
         setPopupBlocked(false);
+
+        // Open first link immediately
+        const firstWin = window.open(links[0], "_blank", "noopener,noreferrer");
+        if (!firstWin || firstWin.closed) {
+            setPopupBlocked(true);
+            setStarted(false);
+            setCurrentLinkIndex(-1);
+            alert("⚠️ Pop-ups are blocked! Please allow them and click Restart.");
+            return;
+        }
+
+        // Pre-open the remaining windows
+        const remainingWins = links.slice(1).map(() =>
+            window.open("about:blank", "_blank", "noopener,noreferrer")
+        );
+
+        if (remainingWins.some((w) => !w || w.closed)) {
+            setPopupBlocked(true);
+            setStarted(false);
+            alert("⚠️ Pop-ups are blocked! Please allow them and click Restart.");
+            return;
+        }
+
+        setWindows([firstWin, ...remainingWins]);
+        setProgress((1 / links.length) * 100);
+        setCurrentMessage(messages[0]);
+        setCurrentLinkIndex(1);
     };
 
     const handleReset = () => {
@@ -42,27 +71,21 @@ const Linker = () => {
         setCompleted(false);
         setShowConfetti(false);
         setCurrentMessage(messages[0]);
+        setWindows([]);
         setPopupBlocked(false);
     };
 
-    // Link opening logic with popup check
+    // Auto navigation for remaining links
     useEffect(() => {
-        if (started && currentLinkIndex >= 0 && currentLinkIndex < links.length) {
+        if (started && currentLinkIndex > 0 && currentLinkIndex < links.length) {
             const timer = setTimeout(() => {
-                const newWindow = window.open(
-                    links[currentLinkIndex],
-                    "_blank",
-                    "noopener,noreferrer"
-                );
-
-                if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
-                    // Pop-up blocked
+                const win = windows[currentLinkIndex];
+                if (win && !win.closed) {
+                    win.location.href = links[currentLinkIndex];
+                } else {
                     setPopupBlocked(true);
                     setStarted(false);
-                    setCurrentLinkIndex(-1);
-                    alert(
-                        "Pop-ups are blocked! Please allow pop-ups in your browser settings and restart the process."
-                    );
+                    alert("⚠️ Pop-up window was closed. Please keep them open.");
                     return;
                 }
 
@@ -79,7 +102,7 @@ const Linker = () => {
 
             return () => clearTimeout(timer);
         }
-    }, [currentLinkIndex, started]);
+    }, [currentLinkIndex, started, windows]);
 
     const features = [
         {
@@ -124,13 +147,8 @@ const Linker = () => {
                 )}
 
                 <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
-                    🎉 GSA Program Journey
+                    🎉 GSA program Journey
                 </h1>
-
-                <p className="text-red-600 font-semibold mb-4 text-center">
-                    ⚠️ Note: For certificate eligibility, please open this app on your PC and
-                    make sure pop-ups are allowed in your browser.
-                </p>
 
                 <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center space-y-6">
                     {!started && !completed && !popupBlocked && (
@@ -138,6 +156,9 @@ const Linker = () => {
                             <p className="text-lg text-gray-700 text-center">
                                 Click the button to start Process <b>Gemini's Adventure</b>.
                                 Sit back, relax, and wait!
+                            </p>
+                            <p className="text-sm text-red-500 text-center">
+                                ⚠️ Note: If you want to receive the certificate, please open this app on a PC and allow pop-ups in your browser.
                             </p>
                             <button
                                 className="relative block group"
@@ -151,6 +172,23 @@ const Linker = () => {
                                 </div>
                             </button>
                         </>
+                    )}
+
+                    {popupBlocked && (
+                        <div className="text-center space-y-4">
+                            <p className="text-red-600 font-bold">
+                                ⚠️ Pop-ups were blocked or closed!
+                            </p>
+                            <p className="text-gray-700">
+                                Please allow pop-ups in your browser and click restart.
+                            </p>
+                            <button
+                                onClick={handleReset}
+                                className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
+                            >
+                                🔄 Restart
+                            </button>
+                        </div>
                     )}
 
                     {started && !completed && (
@@ -197,13 +235,6 @@ const Linker = () => {
                                     ❌ No thanks
                                 </button>
                             </div>
-                        </div>
-                    )}
-
-                    {popupBlocked && (
-                        <div className="text-center text-red-600 font-semibold">
-                            ❌ Pop-ups were blocked. Please allow pop-ups in your browser
-                            settings and click <b>Start</b> again.
                         </div>
                     )}
                 </div>
