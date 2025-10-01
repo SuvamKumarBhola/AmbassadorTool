@@ -15,8 +15,8 @@ const Linker = () => {
     const [progress, setProgress] = useState(0);
     const [completed, setCompleted] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    const [windows, setWindows] = useState([]);
     const [popupBlocked, setPopupBlocked] = useState(false);
+    const [windows, setWindows] = useState([]);
 
     const messages = [
         "💡 Patience is the secret sauce of success!",
@@ -27,7 +27,21 @@ const Linker = () => {
     ];
     const [currentMessage, setCurrentMessage] = useState(messages[0]);
 
-    // Start process
+    // Manual open fallback
+    const manualOpen = (link, index) => {
+        const win = window.open(link, "_blank", "noopener,noreferrer");
+        if (!win || win.closed) {
+            alert("⚠️ Unable to open link. Please check your popup settings.");
+        } else {
+            setProgress(((index + 1) / links.length) * 100);
+            setCurrentMessage(messages[index % messages.length]);
+            if (index === links.length - 1) {
+                setCompleted(true);
+                setShowConfetti(true);
+            }
+        }
+    };
+
     const handleStart = () => {
         setStarted(true);
         setProgress(0);
@@ -36,7 +50,7 @@ const Linker = () => {
         setShowConfetti(false);
         setPopupBlocked(false);
 
-        // Open first link immediately
+        // Try opening first link immediately
         const firstWin = window.open(links[0], "_blank", "noopener,noreferrer");
         if (!firstWin || firstWin.closed) {
             setPopupBlocked(true);
@@ -46,7 +60,7 @@ const Linker = () => {
             return;
         }
 
-        // Pre-open the remaining windows
+        // Pre-open blank windows for the rest
         const remainingWins = links.slice(1).map(() =>
             window.open("about:blank", "_blank", "noopener,noreferrer")
         );
@@ -61,7 +75,7 @@ const Linker = () => {
         setWindows([firstWin, ...remainingWins]);
         setProgress((1 / links.length) * 100);
         setCurrentMessage(messages[0]);
-        setCurrentLinkIndex(1);
+        setCurrentLinkIndex(1); // schedule the next ones
     };
 
     const handleReset = () => {
@@ -71,13 +85,17 @@ const Linker = () => {
         setCompleted(false);
         setShowConfetti(false);
         setCurrentMessage(messages[0]);
-        setWindows([]);
         setPopupBlocked(false);
     };
 
-    // Auto navigation for remaining links
+    // Auto-navigation for the rest of the links
     useEffect(() => {
-        if (started && currentLinkIndex > 0 && currentLinkIndex < links.length) {
+        if (
+            started &&
+            currentLinkIndex > 0 &&
+            currentLinkIndex < links.length &&
+            windows.length > 0
+        ) {
             const timer = setTimeout(() => {
                 const win = windows[currentLinkIndex];
                 if (win && !win.closed) {
@@ -147,23 +165,17 @@ const Linker = () => {
                 )}
 
                 <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
-                    🎉 GSA program Journey
+                    🎉 GSA Program Journey
                 </h1>
 
                 <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8 flex flex-col items-center space-y-6">
-                    {!started && !completed && !popupBlocked && (
+                    {!started && !completed && (
                         <>
                             <p className="text-lg text-gray-700 text-center">
-                                Click the button to start Process <b>Gemini's Adventure</b>.
-                                Sit back, relax, and wait!
+                                Click the button to start <b>Gemini's Adventure</b>. Sit back,
+                                relax, and wait!
                             </p>
-                            <p className="text-sm text-red-500 text-center">
-                                ⚠️ Note: If you want to receive the certificate, please open this app on a PC and allow pop-ups in your browser.
-                            </p>
-                            <button
-                                className="relative block group"
-                                onClick={handleStart}
-                            >
+                            <button className="relative block group" onClick={handleStart}>
                                 <span className="absolute inset-0 bg-indigo-500 rounded-lg"></span>
                                 <div className="transition bg-black relative border-2 rounded-lg -translate-x-2 -translate-y-2 w-30">
                                     <div className="p-3">
@@ -172,23 +184,6 @@ const Linker = () => {
                                 </div>
                             </button>
                         </>
-                    )}
-
-                    {popupBlocked && (
-                        <div className="text-center space-y-4">
-                            <p className="text-red-600 font-bold">
-                                ⚠️ Pop-ups were blocked or closed!
-                            </p>
-                            <p className="text-gray-700">
-                                Please allow pop-ups in your browser and click restart.
-                            </p>
-                            <button
-                                onClick={handleReset}
-                                className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
-                            >
-                                🔄 Restart
-                            </button>
-                        </div>
                     )}
 
                     {started && !completed && (
@@ -214,7 +209,8 @@ const Linker = () => {
                                 🎊 Adventure Completed!
                             </h2>
                             <p className="text-lg">
-                                Do you want to claim your <b>Google Ambassador Certificate</b>?
+                                Do you want to claim your{" "}
+                                <b>Google Ambassador Certificate</b>?
                             </p>
                             <div className="flex space-x-4 justify-center">
                                 <button
@@ -239,21 +235,44 @@ const Linker = () => {
                     )}
                 </div>
 
+                {/* Manual Links Section */}
+                <div className="mt-8 w-full max-w-md border border-gray-300 rounded-lg p-4 bg-white shadow-md text-black">
+                    <h3 className="text-lg font-bold mb-3 text-center">🔗 Manual Links</h3>
+                    <ul className="space-y-2">
+                        {links.map((link, index) => (
+                            <li
+                                key={index}
+                                className="flex justify-between items-center px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition"
+                            >
+                                <span className="font-medium">Link {index + 1}</span>
+                                <button
+                                    onClick={() => manualOpen(link, index)}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
+                                >
+                                    Open
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="mt-4 text-center text-gray-700 text-sm">
+                        🕒 Note: If auto-opening fails, you can open links manually but
+                        please wait until the timer completes for the certificate prompt.
+                    </p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 mt-16">
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className="group p-8 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 transform hover:-translate-y-2"
+                            className="group p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-2"
                         >
                             <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
                                 {feature.icon}
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">
                                 {feature.title}
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                {feature.description}
-                            </p>
+                            <p className="text-gray-600">{feature.description}</p>
                         </div>
                     ))}
                 </div>
